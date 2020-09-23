@@ -27,6 +27,10 @@ export WEBUIBOXEDLAYOUT
 
 export adlistFile='/etc/pihole/adlists.list'
 
+# The sourced webpage.sh effectively set those values to a default, so keep the value
+QL=$QUERY_LOGGING
+PL=$PRIVACY_LEVEL
+
 # The below functions are all contained in bash_functions.sh
 . /bash_functions.sh
 
@@ -52,7 +56,7 @@ validate_env || exit 1
 prepare_configs
 change_setting "PIHOLE_INTERFACE" "$PIHOLE_INTERFACE"
 change_setting "IPV4_ADDRESS" "$IPV4_ADDRESS"
-change_setting "QUERY_LOGGING" "$QUERY_LOGGING"
+change_setting "QUERY_LOGGING" "${QL:-$QUERY_LOGGING}"
 change_setting "INSTALL_WEB_SERVER" "$INSTALL_WEB_SERVER"
 change_setting "INSTALL_WEB_INTERFACE" "$INSTALL_WEB_INTERFACE"
 change_setting "LIGHTTPD_ENABLED" "$LIGHTTPD_ENABLED"
@@ -61,16 +65,26 @@ change_setting "IPV6_ADDRESS" "$ServerIPv6"
 change_setting "DNS_BOGUS_PRIV" "$DNS_BOGUS_PRIV"
 change_setting "DNS_FQDN_REQUIRED" "$DNS_FQDN_REQUIRED"
 change_setting "DNSSEC" "$DNSSEC"
-change_setting "CONDITIONAL_FORWARDING" "$CONDITIONAL_FORWARDING"
-change_setting "CONDITIONAL_FORWARDING_IP" "$CONDITIONAL_FORWARDING_IP"
-change_setting "CONDITIONAL_FORWARDING_DOMAIN" "$CONDITIONAL_FORWARDING_DOMAIN"
-change_setting "CONDITIONAL_FORWARDING_REVERSE" "$CONDITIONAL_FORWARDING_REVERSE"
+if [ -z ${REV_SERVER+x} ]; then
+  change_setting "CONDITIONAL_FORWARDING" "$CONDITIONAL_FORWARDING"
+  change_setting "CONDITIONAL_FORWARDING_IP" "$CONDITIONAL_FORWARDING_IP"
+  change_setting "CONDITIONAL_FORWARDING_DOMAIN" "$CONDITIONAL_FORWARDING_DOMAIN"
+  change_setting "CONDITIONAL_FORWARDING_REVERSE" "$CONDITIONAL_FORWARDING_REVERSE"
+else
+  change_setting "REV_SERVER" "$REV_SERVER"
+  change_setting "REV_SERVER_CIDR" "$REV_SERVER_CIDR"
+  change_setting "REV_SERVER_TARGET" "$REV_SERVER_TARGET"
+  change_setting "REV_SERVER_DOMAIN" "$REV_SERVER_DOMAIN"
+fi
+changeFTLsetting "PRIVACYLEVEL" "${PL:-$PRIVACY_LEVEL}"
 setup_web_port "$WEB_PORT"
 setup_web_password "$WEBPASSWORD"
 setup_temp_unit "$TEMPERATUREUNIT"
 setup_ui_layout "$WEBUIBOXEDLAYOUT"
 setup_admin_email "$ADMIN_EMAIL"
-setup_dnsmasq "$DNS1" "$DNS2" "$INTERFACE" "$DNSMASQ_LISTENING_BEHAVIOUR"
+change_setting "PIHOLE_DNS_3" "$PIHOLE_DNS_3"
+change_setting "PIHOLE_DNS_4" "$PIHOLE_DNS_4"
+setup_dnsmasq "${PIHOLE_DNS_1:-$DNS1}" "${PIHOLE_DNS_2:$DNS2}" "$INTERFACE" "$DNSMASQ_LISTENING_BEHAVIOUR"
 setup_php_env
 setup_dnsmasq_hostnames "$ServerIP" "$ServerIPv6" "$HOSTNAME"
 setup_ipv4_ipv6
